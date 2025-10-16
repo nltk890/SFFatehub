@@ -1,5 +1,5 @@
-
 {
   "name": "Creator Giveaway Hub",
-  "description": "A platform for content creators to host engaging giveaways. Users can log in, verify their YouTube channel engagement, and enter various types of giveaways to win rewards."
+  "description": "A platform for content creators to host engaging giveaways. Users can log in, verify their YouTube channel engagement, and enter various types of giveaways to win rewards.",
+  "requestFramePermissions": []
 }

@@ -1,6 +1,5 @@
-
-// IMPORTANT: Replace this with the Firebase UID of the admin user.
-export const ADMIN_UID = process.env.ADMIN_USER_ID;
+// IMPORTANT: This is now set via GitHub secrets as VITE_ADMIN_UID
+export const ADMIN_UID = import.meta.env.VITE_ADMIN_UID;
 
 export const COLLECTIONS = {
     USERS: 'users',

@@ -1,3 +1,5 @@
+// Fix: Add a triple-slash directive to include Vite's client types. This provides type definitions for `import.meta.env` and resolves errors in other files.
+/// <reference types="vite/client" />
 
 import { Timestamp } from 'firebase/firestore';
 
