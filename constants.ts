@@ -5,4 +5,5 @@ export const COLLECTIONS = {
     USERS: 'users',
     GIVEAWAYS: 'giveaways',
     ENTRIES: 'entries',
+    GIVEAWAY_CODES: 'giveaway_codes',
 };
