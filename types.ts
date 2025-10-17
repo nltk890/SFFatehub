@@ -5,13 +5,16 @@ import { Timestamp } from 'firebase/firestore';
 
 export interface UserProfile {
   uid: string;
-  displayName: string | null;
+  displayName: string | null; // From Google
+  publicDisplayName?: string; // Chosen by user
   email: string | null;
   photoURL: string | null;
   youtubeChannelId?: string;
   isSubscribed?: boolean;
   isChannelMember?: boolean;
   engagementPoints?: number;
+  verificationImageUrl?: string;
+  verificationStatus?: 'unverified' | 'pending' | 'approved' | 'rejected';
 }
 
 export type GiveawayType = 'CodeL' | 'CodeS';
@@ -27,12 +30,14 @@ export interface Giveaway {
   endDate: Timestamp;
   requiredVideoId?: string;
   trackedVideoIds?: string[];
-  winnerId?: string;
-  winnerDisplayName?: string;
+  provisionalWinnerId?: string;
+  provisionalWinnerDisplayName?: string;
+  publishedWinnerId?: string;
+  publishedWinnerDisplayName?: string;
   imageUrl?: string;
 }
 
-export type EntryMethod = 'code' | 'screenshot';
+export type EntryMethod = 'code';
 export type EntryStatus = 'pending' | 'approved' | 'rejected';
 
 export interface Entry {
@@ -41,8 +46,17 @@ export interface Entry {
   userId: string;
   userDisplayName: string;
   entryMethod: EntryMethod;
-  value: string; // code or screenshot URL
+  value: string; // code
   multiplier: number;
   status: EntryStatus;
   timestamp: Timestamp;
+}
+
+export interface GiveawayCode {
+    id: string;
+    giveawayId: string;
+    codeString: string;
+    multiplier: number;
+    isUsed: boolean;
+    usedBy: string | null;
 }

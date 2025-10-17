@@ -74,8 +74,8 @@ const GiveawayCard: React.FC<GiveawayCardProps> = ({ giveaway }) => {
         <p className="mt-2 text-gray-400 text-sm h-10 overflow-hidden">{giveaway.description}</p>
         <div className="mt-4">
              {giveaway.status === 'active' && <CountdownTimer endDate={giveaway.endDate} />}
-             {giveaway.status === 'finished' && giveaway.winnerDisplayName && (
-                <p className="text-sm text-green-400">Winner: {giveaway.winnerDisplayName}</p>
+             {giveaway.status === 'finished' && giveaway.publishedWinnerDisplayName && (
+                <p className="text-sm text-green-400">Winner: {giveaway.publishedWinnerDisplayName}</p>
              )}
         </div>
         <div className="mt-6">

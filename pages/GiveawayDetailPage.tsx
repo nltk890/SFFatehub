@@ -1,11 +1,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
-import { doc, getDoc, collection, addDoc, query, where, getDocs, Timestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../services/firebase';
+import { useParams, Link } from 'react-router-dom';
+import { doc, getDoc, collection, addDoc, query, where, getDocs, Timestamp, runTransaction } from 'firebase/firestore';
+import { db } from '../services/firebase';
 import { useAuth } from '../context/AuthContext';
-import { Giveaway, Entry, EntryMethod, EntryStatus } from '../types';
+import { Giveaway, Entry, GiveawayCode } from '../types';
 import { COLLECTIONS } from '../constants';
 
 const GiveawayDetailPage: React.FC = () => {
@@ -15,7 +14,6 @@ const GiveawayDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [entryCode, setEntryCode] = useState('');
-  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [hasEntered, setHasEntered] = useState(false);
@@ -28,7 +26,6 @@ const GiveawayDetailPage: React.FC = () => {
         const giveawayDoc = await getDoc(giveawayDocRef);
 
         if (giveawayDoc.exists()) {
-            // Fix: Spread types may only be created from object types. Replaced object spread with `Object.assign`.
             setGiveaway(Object.assign({ id: giveawayDoc.id }, giveawayDoc.data()) as Giveaway);
             
             const entriesQuery = query(
@@ -56,12 +53,6 @@ const GiveawayDetailPage: React.FC = () => {
     fetchGiveawayAndEntryStatus();
   }, [fetchGiveawayAndEntryStatus]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setScreenshotFile(e.target.files[0]);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !userProfile || !giveaway) return;
@@ -73,52 +64,75 @@ const GiveawayDetailPage: React.FC = () => {
         setMessage({ type: 'error', text: 'This giveaway is not active.' });
         return;
     }
+    if (userProfile.verificationStatus !== 'approved') {
+        setMessage({ type: 'error', text: 'Your account must be verified to enter. Please check your profile.' });
+        return;
+    }
 
     setSubmitting(true);
     setMessage(null);
 
     try {
-      let entryMethod: EntryMethod = 'code';
-      let value = entryCode;
-      let status: EntryStatus = 'approved'; // auto-approve code entries
-
-      if (screenshotFile) {
-        entryMethod = 'screenshot';
-        status = 'pending'; // screenshots need manual approval
-        const storageRef = ref(storage, `entries/${giveaway.id}/${user.uid}-${screenshotFile.name}`);
-        const snapshot = await uploadBytes(storageRef, screenshotFile);
-        value = await getDownloadURL(snapshot.ref);
-      } else if (!entryCode.trim()) {
-        setMessage({type: 'error', text: 'Please enter a code or upload a screenshot.'});
+      if (!entryCode.trim()) {
+        setMessage({type: 'error', text: 'Please enter a code.'});
         setSubmitting(false);
         return;
       }
       
-      let multiplier = 1;
-      const codeParts = entryCode.toLowerCase().split('_x');
-      if (codeParts.length === 2 && !isNaN(parseInt(codeParts[1]))) {
-          multiplier = parseInt(codeParts[1]);
+      const codesRef = collection(db, COLLECTIONS.GIVEAWAY_CODES);
+      const q = query(codesRef, 
+        where('giveawayId', '==', giveaway.id),
+        where('codeString', '==', entryCode.trim())
+      );
+      
+      const codeQuerySnapshot = await getDocs(q);
+      
+      if (codeQuerySnapshot.empty) {
+        setMessage({ type: 'error', text: 'Invalid code.' });
+        setSubmitting(false);
+        return;
+      }
+      
+      const codeDoc = codeQuerySnapshot.docs[0];
+      const codeData = codeDoc.data() as GiveawayCode;
+      
+      if (codeData.isUsed) {
+        setMessage({ type: 'error', text: 'This code has already been used.' });
+        setSubmitting(false);
+        return;
       }
 
-      const newEntry: Omit<Entry, 'id'> = {
-        giveawayId: giveaway.id,
-        userId: user.uid,
-        userDisplayName: userProfile.displayName || 'Anonymous',
-        entryMethod,
-        value,
-        multiplier,
-        status,
-        timestamp: Timestamp.now(),
-      };
+      await runTransaction(db, async (transaction) => {
+        const codeDocRef = doc(db, COLLECTIONS.GIVEAWAY_CODES, codeDoc.id);
+        const freshCodeDoc = await transaction.get(codeDocRef);
+        
+        if (freshCodeDoc.data()?.isUsed) {
+          throw new Error("Code was used by someone else during submission. Please try another code.");
+        }
 
-      await addDoc(collection(db, COLLECTIONS.ENTRIES), newEntry);
+        const newEntry: Omit<Entry, 'id'> = {
+          giveawayId: giveaway.id,
+          userId: user.uid,
+          userDisplayName: userProfile.publicDisplayName || userProfile.displayName || 'Anonymous',
+          entryMethod: 'code',
+          value: entryCode.trim(),
+          multiplier: codeData.multiplier,
+          status: 'approved',
+          timestamp: Timestamp.now(),
+        };
+
+        const entriesCollectionRef = collection(db, COLLECTIONS.ENTRIES);
+        transaction.set(doc(entriesCollectionRef), newEntry);
+        transaction.update(codeDocRef, { isUsed: true, usedBy: user.uid });
+      });
+
+
       setMessage({ type: 'success', text: 'Your entry has been submitted successfully!' });
       setHasEntered(true);
       setEntryCode('');
-      setScreenshotFile(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setMessage({ type: 'error', text: 'Failed to submit entry. Please try again.' });
+      setMessage({ type: 'error', text: err.message || 'Failed to submit entry. Please try again.' });
     } finally {
       setSubmitting(false);
     }
@@ -129,6 +143,7 @@ const GiveawayDetailPage: React.FC = () => {
   if (!giveaway) return null;
 
   const isGiveawayActive = giveaway.status === 'active';
+  const isUserVerified = userProfile?.verificationStatus === 'approved';
 
   return (
     <div className="max-w-4xl mx-auto bg-gray-800 p-8 rounded-lg shadow-2xl">
@@ -138,10 +153,10 @@ const GiveawayDetailPage: React.FC = () => {
       <p className="mt-4 text-gray-300">{giveaway.description}</p>
       <p className="mt-4 text-sm text-gray-400">Ends on: {giveaway.endDate.toDate().toLocaleString()}</p>
 
-      {giveaway.status === 'finished' && giveaway.winnerDisplayName && (
+      {giveaway.status === 'finished' && giveaway.publishedWinnerDisplayName && (
           <div className="mt-8 p-4 bg-green-900/50 border border-green-500 rounded-lg text-center">
               <h3 className="text-2xl font-bold text-green-400">Giveaway Finished!</h3>
-              <p className="text-lg mt-2">Congratulations to the winner: <span className="font-bold">{giveaway.winnerDisplayName}</span></p>
+              <p className="text-lg mt-2">Congratulations to the winner: <span className="font-bold">{giveaway.publishedWinnerDisplayName}</span></p>
           </div>
       )}
 
@@ -152,6 +167,11 @@ const GiveawayDetailPage: React.FC = () => {
                 <div className="p-4 bg-green-900/50 border border-green-500 rounded-lg text-center">
                     <p className="text-green-400 font-semibold">You have successfully entered this giveaway!</p>
                 </div>
+            ) : !isUserVerified ? (
+                 <div className="p-4 bg-yellow-900/50 border border-yellow-500 rounded-lg text-center">
+                    <p className="text-yellow-400 font-semibold">Your account must be approved before you can enter giveaways.</p>
+                     <p className="text-sm mt-2">Please go to your <Link to="/profile" className="font-bold underline hover:text-yellow-300">Profile Page</Link> to check your verification status.</p>
+                </div>
             ) : (
                 <form onSubmit={handleSubmit}>
                 <div className="mb-4">
@@ -161,23 +181,11 @@ const GiveawayDetailPage: React.FC = () => {
                     id="entryCode"
                     value={entryCode}
                     onChange={(e) => setEntryCode(e.target.value)}
-                    placeholder="e.g., SECRETCODE_x3"
+                    placeholder="e.g., SECRETCODE"
                     className="w-full bg-gray-700 text-white p-2 rounded-md border border-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
                     />
                 </div>
-                <div className="my-4 text-center text-gray-400">OR</div>
-                <div className="mb-4">
-                    <label htmlFor="screenshot" className="block text-sm font-medium text-gray-300 mb-2">Upload Screenshot (for manual verification)</label>
-                    <input
-                    type="file"
-                    id="screenshot"
-                    onChange={handleFileChange}
-                    accept="image/*"
-                    className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500"
-                    />
-                    {screenshotFile && <p className="text-xs mt-2 text-gray-400">Selected: {screenshotFile.name}</p>}
-                </div>
-
+                
                 {message && (
                     <div className={`p-3 my-4 rounded-md text-sm ${message.type === 'success' ? 'bg-green-800 text-green-200' : 'bg-red-800 text-red-200'}`}>
                     {message.text}

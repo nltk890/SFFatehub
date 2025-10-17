@@ -28,8 +28,8 @@ const LoginPage: React.FC = () => {
           displayName: user.displayName,
           email: user.email,
           photoURL: user.photoURL,
-          // These would be updated by a backend process after API verification
-          youtubeChannelId: 'pending_verification',
+          publicDisplayName: '',
+          verificationStatus: 'unverified',
           isSubscribed: false,
           isChannelMember: false,
           engagementPoints: 0,

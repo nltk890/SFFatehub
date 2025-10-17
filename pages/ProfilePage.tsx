@@ -1,15 +1,23 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { db } from '../services/firebase';
-import { Entry } from '../types';
+import { collection, query, where, getDocs, orderBy, doc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../services/firebase';
+import { Entry, UserProfile } from '../types';
 import { COLLECTIONS } from '../constants';
 
 const ProfilePage: React.FC = () => {
   const { user, userProfile } = useAuth();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // State for editing profile
+  const [isEditing, setIsEditing] = useState(false);
+  const [publicDisplayName, setPublicDisplayName] = useState(userProfile?.publicDisplayName || '');
+  const [verificationFile, setVerificationFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEntries = async () => {
@@ -21,7 +29,6 @@ const ProfilePage: React.FC = () => {
           orderBy('timestamp', 'desc')
         );
         const querySnapshot = await getDocs(q);
-        // Fix: Spread types may only be created from object types. Replaced object spread with `Object.assign`.
         const entriesData = querySnapshot.docs.map(doc => (Object.assign({ id: doc.id }, doc.data()) as Entry));
         setEntries(entriesData);
       } catch (error) {
@@ -33,6 +40,39 @@ const ProfilePage: React.FC = () => {
 
     fetchEntries();
   }, [user]);
+
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !userProfile) return;
+    setIsSubmitting(true);
+    setMessage(null);
+
+    try {
+        const updateData: Partial<UserProfile> = {
+            publicDisplayName,
+        };
+
+        if (verificationFile) {
+            const storageRef = ref(storage, `verifications/${user.uid}/${verificationFile.name}`);
+            const snapshot = await uploadBytes(storageRef, verificationFile);
+            updateData.verificationImageUrl = await getDownloadURL(snapshot.ref);
+            updateData.verificationStatus = 'pending';
+        }
+
+        const userDocRef = doc(db, COLLECTIONS.USERS, user.uid);
+        await updateDoc(userDocRef, updateData);
+
+        setMessage("Profile updated successfully! Refreshing the page may be required to see all changes.");
+        setIsEditing(false);
+        setVerificationFile(null);
+
+    } catch (error) {
+        console.error("Error updating profile: ", error);
+        setMessage("Failed to update profile.");
+    } finally {
+        setIsSubmitting(false);
+    }
+  }
 
   if (loading) {
     return <div className="text-center mt-10">Loading profile...</div>;
@@ -47,25 +87,51 @@ const ProfilePage: React.FC = () => {
     approved: 'bg-green-500',
     rejected: 'bg-red-500',
   };
+  
+  const verificationStatusUI = {
+      unverified: { text: 'Not Verified', color: 'bg-gray-500' },
+      pending: { text: 'Pending Approval', color: 'bg-yellow-500' },
+      approved: { text: 'Approved', color: 'bg-green-500' },
+      rejected: { text: 'Rejected', color: 'bg-red-500' },
+  };
+  const currentVerification = userProfile.verificationStatus ? verificationStatusUI[userProfile.verificationStatus] : verificationStatusUI.unverified;
+
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-gray-800 p-8 rounded-lg shadow-xl mb-8 flex items-center space-x-6">
-        <img src={userProfile.photoURL || ''} alt="profile" className="w-24 h-24 rounded-full border-4 border-indigo-500" />
-        <div>
-          <h1 className="text-3xl font-bold">{userProfile.displayName}</h1>
-          <p className="text-gray-400">{userProfile.email}</p>
-          <div className="mt-4 flex space-x-4">
-              <div className="bg-gray-700 p-3 rounded-lg text-center">
-                  <p className="text-xs text-gray-400 uppercase">Engagement Points</p>
-                  <p className="text-2xl font-bold text-indigo-400">{userProfile.engagementPoints || 0}</p>
-              </div>
-              <div className="bg-gray-700 p-3 rounded-lg text-center">
-                  <p className="text-xs text-gray-400 uppercase">Channel Member</p>
-                  <p className="text-2xl font-bold text-indigo-400">{userProfile.isChannelMember ? 'Yes' : 'No'}</p>
-              </div>
-          </div>
+      <div className="bg-gray-800 p-8 rounded-lg shadow-xl mb-8">
+        <div className="flex items-center space-x-6 mb-6">
+            <img src={userProfile.photoURL || ''} alt="profile" className="w-24 h-24 rounded-full border-4 border-indigo-500" />
+            <div>
+              <h1 className="text-3xl font-bold">{userProfile.publicDisplayName || userProfile.displayName}</h1>
+              <p className="text-gray-400">{userProfile.email}</p>
+              <span className={`mt-2 inline-block px-3 py-1 text-xs font-semibold text-white ${currentVerification.color} rounded-full uppercase`}>
+                {currentVerification.text}
+              </span>
+            </div>
         </div>
+        {!isEditing ? (
+             <button onClick={() => setIsEditing(true)} className="bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-500">Edit Profile</button>
+        ) : (
+            <form onSubmit={handleProfileUpdate} className="space-y-4 mt-4 pt-4 border-t border-gray-700">
+                <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Public Display Name</label>
+                    <input type="text" value={publicDisplayName} onChange={e => setPublicDisplayName(e.target.value)} className="w-full bg-gray-700 p-2 rounded-md" />
+                </div>
+                {(userProfile.verificationStatus === 'unverified' || userProfile.verificationStatus === 'rejected') && (
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">Re-submit Verification Image</label>
+                        <input type="file" onChange={e => setVerificationFile(e.target.files ? e.target.files[0] : null)} className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-indigo-600 file:text-white" />
+                        {userProfile.verificationStatus === 'rejected' && <p className="text-xs text-red-400 mt-1">Your previous submission was rejected. Please upload a new image.</p>}
+                    </div>
+                )}
+                {message && <p className="text-center text-sm text-gray-300">{message}</p>}
+                <div className="flex space-x-2">
+                    <button type="submit" disabled={isSubmitting} className="bg-green-600 py-2 px-4 rounded-md disabled:bg-gray-500">{isSubmitting ? 'Saving...' : 'Save Changes'}</button>
+                    <button type="button" onClick={() => setIsEditing(false)} className="bg-gray-600 py-2 px-4 rounded-md">Cancel</button>
+                </div>
+            </form>
+        )}
       </div>
       
       <div className="bg-gray-800 p-8 rounded-lg shadow-xl">
@@ -77,7 +143,6 @@ const ProfilePage: React.FC = () => {
                 <div>
                   <p className="font-semibold">Giveaway ID: {entry.giveawayId}</p>
                   <p className="text-sm text-gray-400">Entered on: {entry.timestamp.toDate().toLocaleDateString()}</p>
-                  <p className="text-sm text-gray-400">Method: {entry.entryMethod}</p>
                 </div>
                 <div className="flex items-center space-x-3">
                   {entry.multiplier > 1 && <span className="text-xs font-bold text-yellow-400 px-2 py-1 rounded-full bg-yellow-900/50">x{entry.multiplier}</span>}

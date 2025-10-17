@@ -9,13 +9,25 @@ import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
 import Header from './components/Header';
 import { ADMIN_UID } from './constants';
+import OnboardingPage from './pages/OnboardingPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, userProfile, loading } = useAuth();
   if (loading) {
     return <div className="flex justify-center items-center h-screen"><p>Loading...</p></div>;
   }
-  return user ? <>{children}</> : <Navigate to="/login" />;
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+  // Redirect to onboarding if profile is not complete
+  if (!userProfile?.publicDisplayName || userProfile.verificationStatus === 'unverified') {
+    // Allow access to onboarding page itself from protected context
+    if (window.location.hash !== '#/onboarding') {
+       return <Navigate to="/onboarding" />;
+    }
+  }
+
+  return <>{children}</>;
 };
 
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -38,6 +50,7 @@ const App: React.FC = () => {
           <main className="container mx-auto p-4 md:p-8">
             <Routes>
               <Route path="/login" element={<LoginPage />} />
+               <Route path="/onboarding" element={<OnboardingPage />} />
               <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
               <Route path="/giveaway/:id" element={<ProtectedRoute><GiveawayDetailPage /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
