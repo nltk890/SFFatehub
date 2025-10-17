@@ -1,9 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { collection, query, where, getDocs, orderBy, doc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../services/firebase';
+import { db } from '../services/firebase';
 import { Entry, UserProfile } from '../types';
 import { COLLECTIONS } from '../constants';
 
@@ -15,7 +13,7 @@ const ProfilePage: React.FC = () => {
   // State for editing profile
   const [isEditing, setIsEditing] = useState(false);
   const [publicDisplayName, setPublicDisplayName] = useState(userProfile?.publicDisplayName || '');
-  const [verificationFile, setVerificationFile] = useState<File | null>(null);
+  const [verificationUrl, setVerificationUrl] = useState(userProfile?.verificationImageUrl || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -52,10 +50,9 @@ const ProfilePage: React.FC = () => {
             publicDisplayName,
         };
 
-        if (verificationFile) {
-            const storageRef = ref(storage, `verifications/${user.uid}/${verificationFile.name}`);
-            const snapshot = await uploadBytes(storageRef, verificationFile);
-            updateData.verificationImageUrl = await getDownloadURL(snapshot.ref);
+        // If the URL has been added or changed, reset status to pending for re-verification
+        if (verificationUrl && verificationUrl !== userProfile.verificationImageUrl) {
+            updateData.verificationImageUrl = verificationUrl;
             updateData.verificationStatus = 'pending';
         }
 
@@ -64,7 +61,6 @@ const ProfilePage: React.FC = () => {
 
         setMessage("Profile updated successfully! Refreshing the page may be required to see all changes.");
         setIsEditing(false);
-        setVerificationFile(null);
 
     } catch (error) {
         console.error("Error updating profile: ", error);
@@ -120,9 +116,18 @@ const ProfilePage: React.FC = () => {
                 </div>
                 {(userProfile.verificationStatus === 'unverified' || userProfile.verificationStatus === 'rejected') && (
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1">Re-submit Verification Image</label>
-                        <input type="file" onChange={e => setVerificationFile(e.target.files ? e.target.files[0] : null)} className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-indigo-600 file:text-white" />
-                        {userProfile.verificationStatus === 'rejected' && <p className="text-xs text-red-400 mt-1">Your previous submission was rejected. Please upload a new image.</p>}
+                        <label className="block text-sm font-medium text-gray-300 mb-1">
+                          {userProfile.verificationStatus === 'rejected' ? 'Re-submit Verification Image URL' : 'Verification Image URL'}
+                        </label>
+                        <input 
+                            type="url" 
+                            value={verificationUrl} 
+                            onChange={e => setVerificationUrl(e.target.value)} 
+                            className="w-full bg-gray-700 p-2 rounded-md"
+                            placeholder="https://imgur.com/your-image-link"
+                        />
+                        <p className="mt-1 text-xs text-gray-500">Upload proof of engagement to a site like Imgur and paste the direct link here.</p>
+                        {userProfile.verificationStatus === 'rejected' && <p className="text-xs text-red-400 mt-1">Your previous submission was rejected. Please provide a new image link.</p>}
                     </div>
                 )}
                 {message && <p className="text-center text-sm text-gray-300">{message}</p>}

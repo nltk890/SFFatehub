@@ -57,3 +57,20 @@ export interface GiveawayCode {
     isUsed: boolean;
     usedBy: string | null;
 }
+
+// Fix: Add global type definitions for Vite environment variables to fix errors related to `import.meta.env`.
+declare global {
+  interface ImportMetaEnv {
+    readonly VITE_ADMIN_UID: string;
+    readonly VITE_FIREBASE_API_KEY: string;
+    readonly VITE_FIREBASE_AUTH_DOMAIN: string;
+    readonly VITE_FIREBASE_PROJECT_ID: string;
+    readonly VITE_FIREBASE_STORAGE_BUCKET: string;
+    readonly VITE_FIREBASE_MESSAGING_SENDER_ID: string;
+    readonly VITE_FIREBASE_APP_ID: string;
+  }
+
+  interface ImportMeta {
+    readonly env: ImportMetaEnv;
+  }
+}

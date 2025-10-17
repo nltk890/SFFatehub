@@ -1,10 +1,8 @@
-// Fix: Add Vite client types to resolve import.meta.env errors.
-/// <reference types="vite/client" />
+// Fix: Removed non-resolving vite/client type reference. Types for import.meta.env are now defined globally in types.ts.
 
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
 
 // Your web app's Firebase configuration is now loaded from environment variables
 // These are set in the GitHub Actions workflow using secrets.
@@ -24,10 +22,9 @@ if (!firebaseConfig.apiKey) {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
 
 // Requesting YouTube scopes
 googleProvider.addScope('https://www.googleapis.com/auth/youtube.readonly');
 
-export { auth, db, storage, googleProvider };
+export { auth, db, googleProvider };
