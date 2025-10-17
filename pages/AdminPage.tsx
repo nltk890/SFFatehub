@@ -306,7 +306,8 @@ const UserVerificationQueue: React.FC = () => {
         setLoading(true);
         const q = query(collection(db, COLLECTIONS.USERS), where('verificationStatus', '==', 'pending'));
         const snapshot = await getDocs(q);
-        setUsers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserProfile & {id: string})));
+        // Fix: Replace object spread with `Object.assign` to prevent "Spread types may only be created from object types" error with `doc.data()`.
+        setUsers(snapshot.docs.map(doc => (Object.assign({ id: doc.id }, doc.data()) as UserProfile & {id: string})));
         setLoading(false);
     }, []);
 

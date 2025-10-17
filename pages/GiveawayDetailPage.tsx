@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { doc, getDoc, collection, addDoc, query, where, getDocs, Timestamp, runTransaction } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, Timestamp, runTransaction } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useAuth } from '../context/AuthContext';
 import { Giveaway, Entry, GiveawayCode } from '../types';

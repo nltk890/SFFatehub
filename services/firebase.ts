@@ -1,3 +1,6 @@
+// Fix: Add Vite client types to resolve import.meta.env errors.
+/// <reference types="vite/client" />
+
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
