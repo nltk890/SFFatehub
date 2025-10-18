@@ -54,8 +54,6 @@ export interface GiveawayCode {
     giveawayId: string;
     codeString: string;
     multiplier: number;
-    isUsed: boolean;
-    usedBy: string | null;
 }
 
 // Fix: Add global type definitions for Vite environment variables to fix errors related to `import.meta.env`.

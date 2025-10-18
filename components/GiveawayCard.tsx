@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Giveaway } from '../types';
@@ -33,7 +32,6 @@ const CountdownTimer: React.FC<{ endDate: Timestamp }> = ({ endDate }) => {
         return () => clearTimeout(timer);
     });
 
-    // Fix: Cannot find namespace 'JSX'. Changed `JSX.Element[]` to `React.ReactNode[]` for better type compatibility.
     const timerComponents: React.ReactNode[] = [];
 
     Object.keys(timeLeft).forEach((interval) => {
@@ -48,7 +46,7 @@ const CountdownTimer: React.FC<{ endDate: Timestamp }> = ({ endDate }) => {
     });
 
     return (
-        <div className="text-sm text-yellow-400">
+        <div className="text-sm text-yellow-500 dark:text-yellow-400">
             {timerComponents.length ? <>{timerComponents} left</> : <span>Giveaway ended!</span>}
         </div>
     );
@@ -57,10 +55,10 @@ const CountdownTimer: React.FC<{ endDate: Timestamp }> = ({ endDate }) => {
 
 const GiveawayCard: React.FC<GiveawayCardProps> = ({ giveaway }) => {
   const badgeColor = giveaway.type === 'CodeL' ? 'bg-red-500' : 'bg-blue-500';
-  const statusColor = giveaway.status === 'active' ? 'text-green-400' : giveaway.status === 'drawing' ? 'text-yellow-400' : 'text-gray-500';
+  const statusColor = giveaway.status === 'active' ? 'text-green-600 dark:text-green-400' : giveaway.status === 'drawing' ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-500 dark:text-gray-500';
 
   return (
-    <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-1 transition-transform duration-300">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden transform hover:-translate-y-1 transition-transform duration-300">
       <img className="h-48 w-full object-cover" src={giveaway.imageUrl || `https://picsum.photos/seed/${giveaway.id}/400/200`} alt={giveaway.title} />
       <div className="p-6">
         <div className="flex justify-between items-start">
@@ -69,13 +67,13 @@ const GiveawayCard: React.FC<GiveawayCardProps> = ({ giveaway }) => {
             </span>
             <span className={`text-xs font-bold uppercase ${statusColor}`}>{giveaway.status}</span>
         </div>
-        <h3 className="mt-4 text-xl font-bold text-white">{giveaway.title}</h3>
-        <p className="mt-2 text-sm text-indigo-300 font-semibold">{giveaway.reward}</p>
-        <p className="mt-2 text-gray-400 text-sm h-10 overflow-hidden">{giveaway.description}</p>
+        <h3 className="mt-4 text-xl font-bold text-gray-900 dark:text-white">{giveaway.title}</h3>
+        <p className="mt-2 text-sm text-indigo-600 dark:text-indigo-300 font-semibold">{giveaway.reward}</p>
+        <p className="mt-2 text-gray-600 dark:text-gray-400 text-sm h-10 overflow-hidden">{giveaway.description}</p>
         <div className="mt-4">
              {giveaway.status === 'active' && <CountdownTimer endDate={giveaway.endDate} />}
              {giveaway.status === 'finished' && giveaway.publishedWinnerDisplayName && (
-                <p className="text-sm text-green-400">Winner: {giveaway.publishedWinnerDisplayName}</p>
+                <p className="text-sm text-green-600 dark:text-green-400">Winner: {giveaway.publishedWinnerDisplayName}</p>
              )}
         </div>
         <div className="mt-6">

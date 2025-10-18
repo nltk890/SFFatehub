@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, getDocs, Timestamp, runTransaction } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, Timestamp, addDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useAuth } from '../context/AuthContext';
 import { Giveaway, Entry, GiveawayCode } from '../types';
@@ -17,6 +16,7 @@ const GiveawayDetailPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [hasEntered, setHasEntered] = useState(false);
+  const [probability, setProbability] = useState<number | null>(null);
 
   const fetchGiveawayAndEntryStatus = useCallback(async () => {
     if (!id || !user) return;
@@ -26,7 +26,8 @@ const GiveawayDetailPage: React.FC = () => {
         const giveawayDoc = await getDoc(giveawayDocRef);
 
         if (giveawayDoc.exists()) {
-            setGiveaway(Object.assign({ id: giveawayDoc.id }, giveawayDoc.data()) as Giveaway);
+            const giveawayData = Object.assign({ id: giveawayDoc.id }, giveawayDoc.data()) as Giveaway;
+            setGiveaway(giveawayData);
             
             const entriesQuery = query(
                 collection(db, COLLECTIONS.ENTRIES),
@@ -36,6 +37,22 @@ const GiveawayDetailPage: React.FC = () => {
             const userEntries = await getDocs(entriesQuery);
             if (!userEntries.empty) {
                 setHasEntered(true);
+                // Calculate probability if user has entered
+                 if (giveawayData.status === 'active' && giveawayData.type === 'CodeS') {
+                    const allEntriesQuery = query(collection(db, COLLECTIONS.ENTRIES), where('giveawayId', '==', id));
+                    const allEntriesSnapshot = await getDocs(allEntriesQuery);
+                    const allEntries = allEntriesSnapshot.docs.map(doc => doc.data() as Entry);
+
+                    const totalWeight = allEntries.reduce((sum, entry) => sum + entry.multiplier, 0);
+                    const userEntryData = userEntries.docs[0].data() as Entry;
+                    
+                    if (userEntryData && totalWeight > 0) {
+                        const userWeight = userEntryData.multiplier;
+                        setProbability((userWeight / totalWeight) * 100);
+                    }
+                }
+            } else {
+                setHasEntered(false);
             }
 
         } else {
@@ -73,63 +90,44 @@ const GiveawayDetailPage: React.FC = () => {
     setMessage(null);
 
     try {
-      if (!entryCode.trim()) {
-        setMessage({type: 'error', text: 'Please enter a code.'});
-        setSubmitting(false);
-        return;
-      }
-      
-      const codesRef = collection(db, COLLECTIONS.GIVEAWAY_CODES);
-      const q = query(codesRef, 
-        where('giveawayId', '==', giveaway.id),
-        where('codeString', '==', entryCode.trim())
-      );
-      
-      const codeQuerySnapshot = await getDocs(q);
-      
-      if (codeQuerySnapshot.empty) {
-        setMessage({ type: 'error', text: 'Invalid code.' });
-        setSubmitting(false);
-        return;
-      }
-      
-      const codeDoc = codeQuerySnapshot.docs[0];
-      const codeData = codeDoc.data() as GiveawayCode;
-      
-      if (codeData.isUsed) {
-        setMessage({ type: 'error', text: 'This code has already been used.' });
-        setSubmitting(false);
-        return;
-      }
+        let multiplier = 1;
+        let usedCode = '';
 
-      await runTransaction(db, async (transaction) => {
-        const codeDocRef = doc(db, COLLECTIONS.GIVEAWAY_CODES, codeDoc.id);
-        const freshCodeDoc = await transaction.get(codeDocRef);
-        
-        if (freshCodeDoc.data()?.isUsed) {
-          throw new Error("Code was used by someone else during submission. Please try another code.");
+        if (entryCode.trim()) {
+            const codesRef = collection(db, COLLECTIONS.GIVEAWAY_CODES);
+            const q = query(codesRef, 
+                where('giveawayId', '==', giveaway.id),
+                where('codeString', '==', entryCode.trim())
+            );
+            const codeQuerySnapshot = await getDocs(q);
+
+            if (codeQuerySnapshot.empty) {
+                setMessage({ type: 'error', text: 'Invalid code.' });
+                setSubmitting(false);
+                return;
+            }
+            const codeData = codeQuerySnapshot.docs[0].data() as GiveawayCode;
+            multiplier = codeData.multiplier;
+            usedCode = entryCode.trim();
         }
 
         const newEntry: Omit<Entry, 'id'> = {
-          giveawayId: giveaway.id,
-          userId: user.uid,
-          userDisplayName: userProfile.publicDisplayName || userProfile.displayName || 'Anonymous',
-          entryMethod: 'code',
-          value: entryCode.trim(),
-          multiplier: codeData.multiplier,
-          status: 'approved',
-          timestamp: Timestamp.now(),
+            giveawayId: giveaway.id,
+            userId: user.uid,
+            userDisplayName: userProfile.publicDisplayName || userProfile.displayName || 'Anonymous',
+            entryMethod: 'code',
+            value: usedCode,
+            multiplier: multiplier,
+            status: 'approved',
+            timestamp: Timestamp.now(),
         };
 
-        const entriesCollectionRef = collection(db, COLLECTIONS.ENTRIES);
-        transaction.set(doc(entriesCollectionRef), newEntry);
-        transaction.update(codeDocRef, { isUsed: true, usedBy: user.uid });
-      });
+        await addDoc(collection(db, COLLECTIONS.ENTRIES), newEntry);
 
-
-      setMessage({ type: 'success', text: 'Your entry has been submitted successfully!' });
-      setHasEntered(true);
-      setEntryCode('');
+        setMessage({ type: 'success', text: 'Your entry has been submitted successfully!' });
+        setHasEntered(true);
+        setEntryCode('');
+        fetchGiveawayAndEntryStatus(); // Re-fetch data to update probability
     } catch (err: any) {
       console.error(err);
       setMessage({ type: 'error', text: err.message || 'Failed to submit entry. Please try again.' });
@@ -146,48 +144,51 @@ const GiveawayDetailPage: React.FC = () => {
   const isUserVerified = userProfile?.verificationStatus === 'approved';
 
   return (
-    <div className="max-w-4xl mx-auto bg-gray-800 p-8 rounded-lg shadow-2xl">
+    <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl">
       <img className="h-64 w-full object-cover rounded-lg mb-6" src={giveaway.imageUrl || `https://picsum.photos/seed/${giveaway.id}/800/400`} alt={giveaway.title} />
-      <h1 className="text-4xl font-bold text-indigo-400">{giveaway.title}</h1>
-      <p className="text-lg text-indigo-300 mt-2">{giveaway.reward}</p>
-      <p className="mt-4 text-gray-300">{giveaway.description}</p>
-      <p className="mt-4 text-sm text-gray-400">Ends on: {giveaway.endDate.toDate().toLocaleString()}</p>
+      <h1 className="text-4xl font-bold text-indigo-600 dark:text-indigo-400">{giveaway.title}</h1>
+      <p className="text-lg text-indigo-500 dark:text-indigo-300 mt-2">{giveaway.reward}</p>
+      <p className="mt-4 text-gray-700 dark:text-gray-300">{giveaway.description}</p>
+      <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">Ends on: {giveaway.endDate.toDate().toLocaleString()}</p>
 
       {giveaway.status === 'finished' && giveaway.publishedWinnerDisplayName && (
-          <div className="mt-8 p-4 bg-green-900/50 border border-green-500 rounded-lg text-center">
-              <h3 className="text-2xl font-bold text-green-400">Giveaway Finished!</h3>
-              <p className="text-lg mt-2">Congratulations to the winner: <span className="font-bold">{giveaway.publishedWinnerDisplayName}</span></p>
+          <div className="mt-8 p-4 bg-green-100 dark:bg-green-900/50 border border-green-500 rounded-lg text-center">
+              <h3 className="text-2xl font-bold text-green-700 dark:text-green-400">Giveaway Finished!</h3>
+              <p className="text-lg mt-2 text-gray-800 dark:text-gray-200">Congratulations to the winner: <span className="font-bold">{giveaway.publishedWinnerDisplayName}</span></p>
           </div>
       )}
 
       {isGiveawayActive && (
-          <div className="mt-8 pt-8 border-t border-gray-700">
+          <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
             <h2 className="text-2xl font-bold mb-4">Enter Giveaway</h2>
             {hasEntered ? (
-                <div className="p-4 bg-green-900/50 border border-green-500 rounded-lg text-center">
-                    <p className="text-green-400 font-semibold">You have successfully entered this giveaway!</p>
+                <div className="p-4 bg-green-100 dark:bg-green-900/50 border border-green-500 rounded-lg text-center">
+                    <p className="text-green-700 dark:text-green-400 font-semibold">You have successfully entered this giveaway!</p>
+                    {probability !== null && (
+                         <p className="text-sm mt-2 text-gray-600 dark:text-gray-300">Your estimated chance of winning is: <span className="font-bold">{probability.toFixed(2)}%</span></p>
+                    )}
                 </div>
             ) : !isUserVerified ? (
-                 <div className="p-4 bg-yellow-900/50 border border-yellow-500 rounded-lg text-center">
-                    <p className="text-yellow-400 font-semibold">Your account must be approved before you can enter giveaways.</p>
-                     <p className="text-sm mt-2">Please go to your <Link to="/profile" className="font-bold underline hover:text-yellow-300">Profile Page</Link> to check your verification status.</p>
+                 <div className="p-4 bg-yellow-100 dark:bg-yellow-900/50 border border-yellow-500 rounded-lg text-center">
+                    <p className="text-yellow-700 dark:text-yellow-400 font-semibold">Your account must be approved before you can enter giveaways.</p>
+                     <p className="text-sm mt-2 text-gray-600 dark:text-gray-300">Please go to your <Link to="/profile" className="font-bold underline hover:text-yellow-600 dark:hover:text-yellow-300">Profile Page</Link> to check your verification status.</p>
                 </div>
             ) : (
                 <form onSubmit={handleSubmit}>
                 <div className="mb-4">
-                    <label htmlFor="entryCode" className="block text-sm font-medium text-gray-300 mb-2">Secret Code (from video)</label>
+                    <label htmlFor="entryCode" className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Secret Code (Optional)</label>
                     <input
                     type="text"
                     id="entryCode"
                     value={entryCode}
                     onChange={(e) => setEntryCode(e.target.value)}
-                    placeholder="e.g., SECRETCODE"
-                    className="w-full bg-gray-700 text-white p-2 rounded-md border border-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Enter a code for a multiplier"
+                    className="w-full bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white p-2 rounded-md border border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
                     />
                 </div>
                 
                 {message && (
-                    <div className={`p-3 my-4 rounded-md text-sm ${message.type === 'success' ? 'bg-green-800 text-green-200' : 'bg-red-800 text-red-200'}`}>
+                    <div className={`p-3 my-4 rounded-md text-sm ${message.type === 'success' ? 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200' : 'bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200'}`}>
                     {message.text}
                     </div>
                 )}

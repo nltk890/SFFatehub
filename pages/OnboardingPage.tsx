@@ -6,7 +6,7 @@ import { db } from '../services/firebase';
 import { COLLECTIONS } from '../constants';
 
 const OnboardingPage: React.FC = () => {
-    const { user } = useAuth();
+    const { user, userProfile, refreshUserProfile } = useAuth();
     const navigate = useNavigate();
     const [publicDisplayName, setPublicDisplayName] = useState('');
     const [verificationUrl, setVerificationUrl] = useState('');
@@ -32,15 +32,14 @@ const OnboardingPage: React.FC = () => {
         setError(null);
 
         try {
-            // Update user profile with the provided URL
             const userDocRef = doc(db, COLLECTIONS.USERS, user.uid);
             await updateDoc(userDocRef, {
                 publicDisplayName,
                 verificationImageUrl: verificationUrl,
                 verificationStatus: 'pending',
             });
-
-            // Redirect to home page
+            
+            await refreshUserProfile();
             navigate('/');
 
         } catch (err) {
@@ -50,20 +49,36 @@ const OnboardingPage: React.FC = () => {
         }
     };
 
+    if (userProfile?.verificationStatus === 'pending') {
+        return (
+            <div className="flex items-center justify-center min-h-[calc(100vh-10rem)]">
+                <div className="w-full max-w-md p-8 space-y-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg text-center">
+                    <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white">
+                        Pending Approval
+                    </h2>
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                        Your profile has been submitted for verification. Please check back later. You can view your status on your profile page.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+
     return (
         <div className="flex items-center justify-center min-h-[calc(100vh-10rem)]">
-            <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-lg shadow-lg">
+            <div className="w-full max-w-md p-8 space-y-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
                 <div>
-                    <h2 className="text-3xl font-extrabold text-center text-white">
+                    <h2 className="text-3xl font-extrabold text-center text-gray-900 dark:text-white">
                         Complete Your Profile
                     </h2>
-                    <p className="mt-2 text-center text-sm text-gray-400">
+                    <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
                         Just a couple more steps to get started!
                     </p>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <label htmlFor="displayName" className="block text-sm font-medium text-gray-300 mb-2">Public Display Name</label>
+                        <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Public Display Name</label>
                         <input
                             type="text"
                             id="displayName"
@@ -71,12 +86,12 @@ const OnboardingPage: React.FC = () => {
                             onChange={(e) => setPublicDisplayName(e.target.value)}
                             placeholder="e.g., CoolCreatorFan"
                             required
-                            className="w-full bg-gray-700 text-white p-2 rounded-md border border-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
+                            className="w-full bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white p-2 rounded-md border border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
                         />
-                         <p className="mt-1 text-xs text-gray-500">This will be shown on winner announcements.</p>
+                         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">This will be shown on winner announcements.</p>
                     </div>
                     <div>
-                        <label htmlFor="verification" className="block text-sm font-medium text-gray-300 mb-2">Verification Image URL</label>
+                        <label htmlFor="verification" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">In-Game Profile Image URL</label>
                         <input
                             type="url"
                             id="verification"
@@ -84,11 +99,11 @@ const OnboardingPage: React.FC = () => {
                             onChange={(e) => setVerificationUrl(e.target.value)}
                             placeholder="https://imgur.com/your-image-link"
                             required
-                            className="w-full bg-gray-700 text-white p-2 rounded-md border border-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
+                            className="w-full bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white p-2 rounded-md border border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
                         />
-                         <p className="mt-1 text-xs text-gray-500">Upload proof of engagement (e.g., subscription screenshot) to a site like Imgur and paste the direct link here.</p>
+                         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Upload a screenshot of your in-game profile to a site like Imgur and paste the direct image link here.</p>
                     </div>
-                    {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+                    {error && <p className="text-red-500 dark:text-red-400 text-sm text-center">{error}</p>}
                     <button
                         type="submit"
                         disabled={submitting}

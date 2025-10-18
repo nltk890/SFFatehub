@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { collection, addDoc, getDocs, doc, updateDoc, query, where, orderBy, Timestamp, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
@@ -7,28 +6,32 @@ import { COLLECTIONS } from '../constants';
 
 type AdminTab = 'create' | 'manage' | 'verification';
 
+interface EntryWithUser extends Entry {
+    userEmail?: string;
+}
+
 const AdminPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<AdminTab>('manage');
 
     return (
         <div className="max-w-7xl mx-auto">
-            <h1 className="text-4xl font-bold mb-8 text-center text-indigo-400">Admin Panel</h1>
-            <div className="flex justify-center border-b border-gray-700 mb-8">
+            <h1 className="text-4xl font-bold mb-8 text-center text-indigo-600 dark:text-indigo-400">Admin Panel</h1>
+            <div className="flex justify-center border-b border-gray-300 dark:border-gray-700 mb-8">
                 <button
                     onClick={() => setActiveTab('manage')}
-                    className={`px-6 py-3 font-semibold ${activeTab === 'manage' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-gray-400'}`}
+                    className={`px-6 py-3 font-semibold ${activeTab === 'manage' ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500' : 'text-gray-500 dark:text-gray-400'}`}
                 >
                     Manage Giveaways
                 </button>
                 <button
                     onClick={() => setActiveTab('create')}
-                    className={`px-6 py-3 font-semibold ${activeTab === 'create' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-gray-400'}`}
+                    className={`px-6 py-3 font-semibold ${activeTab === 'create' ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500' : 'text-gray-500 dark:text-gray-400'}`}
                 >
                     Create Giveaway
                 </button>
                  <button
                     onClick={() => setActiveTab('verification')}
-                    className={`px-6 py-3 font-semibold ${activeTab === 'verification' ? 'text-indigo-400 border-b-2 border-indigo-400' : 'text-gray-400'}`}
+                    className={`px-6 py-3 font-semibold ${activeTab === 'verification' ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500' : 'text-gray-500 dark:text-gray-400'}`}
                 >
                     User Verification
                 </button>
@@ -70,7 +73,6 @@ const CreateGiveawayForm: React.FC = () => {
 
             const giveawayDocRef = await addDoc(collection(db, COLLECTIONS.GIVEAWAYS), newGiveawayData);
             
-            // Batch write codes
             const codesToCreate = codes.split('\n').filter(line => line.trim() !== '');
             if (codesToCreate.length > 0) {
                 const batch = writeBatch(db);
@@ -82,8 +84,6 @@ const CreateGiveawayForm: React.FC = () => {
                             giveawayId: giveawayDocRef.id,
                             codeString: codeString.trim(),
                             multiplier: parseInt(multiplierStr.trim()) || 1,
-                            isUsed: false,
-                            usedBy: null,
                         });
                     }
                 });
@@ -101,22 +101,22 @@ const CreateGiveawayForm: React.FC = () => {
     };
 
     return (
-        <div className="max-w-2xl mx-auto bg-gray-800 p-8 rounded-lg shadow-xl">
+        <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl">
              <form onSubmit={handleSubmit} className="space-y-6">
                 <InputField label="Title" value={title} onChange={e => setTitle(e.target.value)} required />
                 <InputField label="Reward" value={reward} onChange={e => setReward(e.target.value)} required />
                 <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
-                    <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-gray-700 p-2 rounded-md border border-gray-600" rows={3}></textarea>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                    <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-gray-100 dark:bg-gray-700 p-2 rounded-md border border-gray-300 dark:border-gray-600" rows={3}></textarea>
                 </div>
                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Entry Codes (one per line, format: CODE,MULTIPLIER)</label>
-                    <textarea value={codes} onChange={e => setCodes(e.target.value)} className="w-full bg-gray-700 p-2 rounded-md border border-gray-600" rows={5} placeholder="SUMMERFUN,2&#10;BEACHDAY,5"></textarea>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Entry Codes (one per line, format: CODE,MULTIPLIER)</label>
+                    <textarea value={codes} onChange={e => setCodes(e.target.value)} className="w-full bg-gray-100 dark:bg-gray-700 p-2 rounded-md border border-gray-300 dark:border-gray-600" rows={5} placeholder="SUMMERFUN,2&#10;BEACHDAY,5"></textarea>
                 </div>
                 <InputField label="Image URL" type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="Optional. e.g., https://picsum.photos/..." />
                 <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Type</label>
-                    <select value={type} onChange={e => setType(e.target.value as GiveawayType)} className="w-full bg-gray-700 p-2 rounded-md border border-gray-600">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type</label>
+                    <select value={type} onChange={e => setType(e.target.value as GiveawayType)} className="w-full bg-gray-100 dark:bg-gray-700 p-2 rounded-md border border-gray-300 dark:border-gray-600">
                         <option value="CodeS">Code S (Standard)</option>
                         <option value="CodeL">Code L (Weighted)</option>
                     </select>
@@ -135,8 +135,8 @@ const CreateGiveawayForm: React.FC = () => {
 
 const InputField: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label: string }> = ({ label, ...props }) => (
     <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">{label}</label>
-        <input {...props} className="w-full bg-gray-700 p-2 rounded-md border border-gray-600" />
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{label}</label>
+        <input {...props} className="w-full bg-gray-100 dark:bg-gray-700 p-2 rounded-md border border-gray-300 dark:border-gray-600" />
     </div>
 );
 
@@ -168,16 +168,16 @@ const ManageGiveaways: React.FC = () => {
     if (loading) return <p>Loading giveaways...</p>;
 
     return (
-        <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl">
             <div className="space-y-4">
                 {giveaways.map(g => (
-                    <div key={g.id} className="bg-gray-700 p-4 rounded-md flex justify-between items-center">
+                    <div key={g.id} className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md flex justify-between items-center">
                         <div>
-                            <p className="font-bold">{g.title} <span className="text-xs text-gray-400">({g.type})</span></p>
-                            <p className="text-sm text-gray-300">Status: {g.status}</p>
-                            {g.publishedWinnerDisplayName && <p className="text-sm text-green-400">Winner: {g.publishedWinnerDisplayName}</p>}
+                            <p className="font-bold">{g.title} <span className="text-xs text-gray-500 dark:text-gray-400">({g.type})</span></p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">Status: {g.status}</p>
+                            {g.publishedWinnerDisplayName && <p className="text-sm text-green-600 dark:text-green-400">Winner: {g.publishedWinnerDisplayName}</p>}
                         </div>
-                        <button onClick={() => setSelectedGiveaway(g)} className="bg-indigo-600 px-4 py-2 rounded-md hover:bg-indigo-500">
+                        <button onClick={() => setSelectedGiveaway(g)} className="bg-indigo-600 px-4 py-2 rounded-md hover:bg-indigo-500 text-white">
                             Manage
                         </button>
                     </div>
@@ -189,7 +189,7 @@ const ManageGiveaways: React.FC = () => {
 
 
 const GiveawayEntries: React.FC<{ giveaway: Giveaway; onBack: () => void; }> = ({ giveaway, onBack }) => {
-    const [entries, setEntries] = useState<Entry[]>([]);
+    const [entries, setEntries] = useState<EntryWithUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentGiveaway, setCurrentGiveaway] = useState<Giveaway>(giveaway);
 
@@ -197,7 +197,27 @@ const GiveawayEntries: React.FC<{ giveaway: Giveaway; onBack: () => void; }> = (
         setLoading(true);
         const q = query(collection(db, COLLECTIONS.ENTRIES), where('giveawayId', '==', giveaway.id), where('status', '==', 'approved'));
         const snapshot = await getDocs(q);
-        setEntries(snapshot.docs.map(doc => (Object.assign({ id: doc.id }, doc.data()) as Entry)));
+        const entriesData = snapshot.docs.map(doc => (Object.assign({ id: doc.id }, doc.data()) as Entry));
+
+        if (entriesData.length > 0) {
+            const userIds = [...new Set(entriesData.map(e => e.userId))];
+            const userDocs = await Promise.all(userIds.map(uid => getDoc(doc(db, COLLECTIONS.USERS, uid))));
+            const usersMap = new Map<string, UserProfile>();
+            userDocs.forEach(userDoc => {
+                if (userDoc.exists()) {
+                    usersMap.set(userDoc.id, userDoc.data() as UserProfile);
+                }
+            });
+    
+            const entriesWithUsers: EntryWithUser[] = entriesData.map(entry => ({
+                ...entry,
+                userEmail: usersMap.get(entry.userId)?.email || 'N/A'
+            }));
+            setEntries(entriesWithUsers);
+        } else {
+            setEntries([]);
+        }
+        
         setLoading(false);
     }, [giveaway.id]);
     
@@ -240,21 +260,26 @@ const GiveawayEntries: React.FC<{ giveaway: Giveaway; onBack: () => void; }> = (
             winner = topContenders[randomIndex].entry;
         }
 
-        const giveawayRef = doc(db, COLLECTIONS.GIVEAWAYS, giveaway.id);
-        // FIX: Explicitly cast `status` to `GiveawayStatus` to prevent TypeScript inferring it as a generic `string`.
-        const updatedData = {
-            provisionalWinnerId: winner.userId,
-            provisionalWinnerDisplayName: winner.userDisplayName,
-            status: 'drawing' as GiveawayStatus,
-        };
-        await updateDoc(giveawayRef, updatedData);
-        setCurrentGiveaway({...currentGiveaway, ...updatedData });
+        handleSetWinner(winner, false);
     };
+
+    const handleSetWinner = async (entry: Entry, confirm = true) => {
+        const proceed = confirm ? window.confirm(`Set ${entry.userDisplayName} as the provisional winner?`) : true;
+        if (proceed) {
+             const giveawayRef = doc(db, COLLECTIONS.GIVEAWAYS, giveaway.id);
+            const updatedData = {
+                provisionalWinnerId: entry.userId,
+                provisionalWinnerDisplayName: entry.userDisplayName,
+                status: 'drawing' as GiveawayStatus,
+            };
+            await updateDoc(giveawayRef, updatedData);
+            setCurrentGiveaway({...currentGiveaway, ...updatedData });
+        }
+    }
 
     const handlePublishWinner = async () => {
         if (!currentGiveaway.provisionalWinnerId) return;
         const giveawayRef = doc(db, COLLECTIONS.GIVEAWAYS, giveaway.id);
-        // FIX: Explicitly cast `status` to `GiveawayStatus` for type safety when updating Firestore.
         await updateDoc(giveawayRef, {
             publishedWinnerId: currentGiveaway.provisionalWinnerId,
             publishedWinnerDisplayName: currentGiveaway.provisionalWinnerDisplayName,
@@ -266,30 +291,50 @@ const GiveawayEntries: React.FC<{ giveaway: Giveaway; onBack: () => void; }> = (
         onBack();
     }
     
+    const handleExport = () => {
+        const dataStr = JSON.stringify(entries.map(({userDisplayName, userEmail, multiplier, value}) => ({userDisplayName, userEmail, multiplier, code: value})), null, 2);
+        const dataBlob = new Blob([dataStr], {type : 'application/json'});
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${giveaway.title.replace(/\s/g, '_')}_entries.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
 
     return (
-        <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
-            <button onClick={onBack} className="mb-4 bg-gray-600 px-4 py-2 rounded-md hover:bg-gray-500">&larr; Back</button>
-            <h2 className="text-2xl font-bold mb-4">{currentGiveaway.title} Entries ({entries.length})</h2>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl">
+            <button onClick={onBack} className="mb-4 bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">&larr; Back</button>
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">{currentGiveaway.title} Entries ({entries.length})</h2>
+                {entries.length > 0 && <button onClick={handleExport} className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-500">Export to JSON</button>}
+            </div>
 
             {currentGiveaway.status === 'drawing' && currentGiveaway.provisionalWinnerDisplayName && (
-                 <div className="my-4 p-4 bg-yellow-900/50 border border-yellow-500 rounded-lg text-center">
-                    <p className="font-bold text-yellow-400">Provisional Winner: {currentGiveaway.provisionalWinnerDisplayName}</p>
+                 <div className="my-4 p-4 bg-yellow-100 dark:bg-yellow-900/50 border border-yellow-500 rounded-lg text-center">
+                    <p className="font-bold text-yellow-700 dark:text-yellow-400">Provisional Winner: {currentGiveaway.provisionalWinnerDisplayName}</p>
                     <div className="flex justify-center space-x-4 mt-2">
-                        <button onClick={handlePublishWinner} className="bg-green-600 px-4 py-2 rounded-md">Publish Winner</button>
-                        <button onClick={handleDrawProvisionalWinner} className="bg-red-600 px-4 py-2 rounded-md">Redraw</button>
+                        <button onClick={handlePublishWinner} className="bg-green-600 px-4 py-2 rounded-md text-white">Publish Winner</button>
+                        <button onClick={handleDrawProvisionalWinner} className="bg-red-600 px-4 py-2 rounded-md text-white">Redraw</button>
                     </div>
                 </div>
             )}
             
-            {currentGiveaway.status === 'active' && <button onClick={handleDrawProvisionalWinner} className="w-full mb-4 bg-green-600 py-3 rounded-md hover:bg-green-500 font-bold">Draw Provisional Winner</button>}
+            {currentGiveaway.status === 'active' && <button onClick={handleDrawProvisionalWinner} className="w-full mb-4 bg-green-600 py-3 rounded-md hover:bg-green-500 font-bold text-white">Draw Provisional Winner</button>}
             
             {loading ? <p>Loading entries...</p> : (
                  <div className="space-y-2 max-h-96 overflow-y-auto">
                     {entries.map(entry => (
-                        <div key={entry.id} className="bg-gray-700 p-3 rounded-md">
-                            <p>{entry.userDisplayName} (Multiplier: x{entry.multiplier})</p>
-                            <p className="text-xs text-gray-500">{entry.timestamp.toDate().toLocaleString()}</p>
+                        <div key={entry.id} className="bg-gray-100 dark:bg-gray-700 p-3 rounded-md flex justify-between items-center">
+                            <div>
+                                <p><span className="font-semibold">{entry.userDisplayName}</span> (x{entry.multiplier})</p>
+                                <p className="text-xs text-gray-500">{entry.userEmail}</p>
+                            </div>
+                            {currentGiveaway.status === 'active' && (
+                                <button onClick={() => handleSetWinner(entry)} className="bg-indigo-600 text-white text-xs px-3 py-1 rounded-md hover:bg-indigo-500">Set as Winner</button>
+                            )}
                         </div>
                     ))}
                 </div>
@@ -306,7 +351,6 @@ const UserVerificationQueue: React.FC = () => {
         setLoading(true);
         const q = query(collection(db, COLLECTIONS.USERS), where('verificationStatus', '==', 'pending'));
         const snapshot = await getDocs(q);
-        // Fix: Replace object spread with `Object.assign` to prevent "Spread types may only be created from object types" error with `doc.data()`.
         setUsers(snapshot.docs.map(doc => (Object.assign({ id: doc.id }, doc.data()) as UserProfile & {id: string})));
         setLoading(false);
     }, []);
@@ -324,19 +368,19 @@ const UserVerificationQueue: React.FC = () => {
     if (loading) return <p>Loading verification queue...</p>;
 
     return (
-        <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl">
              <h2 className="text-2xl font-bold mb-4">Pending Verifications ({users.length})</h2>
-             {users.length === 0 ? <p className="text-center text-gray-400">No pending verifications.</p> : (
+             {users.length === 0 ? <p className="text-center text-gray-500 dark:text-gray-400">No pending verifications.</p> : (
                 <div className="space-y-4">
                     {users.map(user => (
-                        <div key={user.id} className="bg-gray-700 p-4 rounded-md flex items-center justify-between">
+                        <div key={user.id} className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md flex items-center justify-between">
                             <div>
                                 <p className="font-bold">{user.publicDisplayName || user.displayName}</p>
-                                <a href={user.verificationImageUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline text-sm">View Verification Image</a>
+                                <a href={user.verificationImageUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline text-sm">View Verification Image</a>
                             </div>
                             <div className="flex space-x-2">
-                                <button onClick={() => handleVerification(user.id, 'approved')} className="bg-green-600 text-xs px-3 py-2 rounded">Approve</button>
-                                <button onClick={() => handleVerification(user.id, 'rejected')} className="bg-red-600 text-xs px-3 py-2 rounded">Reject</button>
+                                <button onClick={() => handleVerification(user.id, 'approved')} className="bg-green-600 text-white text-xs px-3 py-2 rounded hover:bg-green-500">Approve</button>
+                                <button onClick={() => handleVerification(user.id, 'rejected')} className="bg-red-600 text-white text-xs px-3 py-2 rounded hover:bg-red-500">Reject</button>
                             </div>
                         </div>
                     ))}
