@@ -15,26 +15,11 @@ const AdminPage: React.FC = () => {
 
     return (
         <div className="max-w-7xl mx-auto">
-            <h1 className="text-4xl font-bold mb-8 text-center text-indigo-600 dark:text-indigo-400">Admin Panel</h1>
-            <div className="flex justify-center border-b border-gray-300 dark:border-gray-700 mb-8">
-                <button
-                    onClick={() => setActiveTab('manage')}
-                    className={`px-6 py-3 font-semibold ${activeTab === 'manage' ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500' : 'text-gray-500 dark:text-gray-400'}`}
-                >
-                    Manage Giveaways
-                </button>
-                <button
-                    onClick={() => setActiveTab('create')}
-                    className={`px-6 py-3 font-semibold ${activeTab === 'create' ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500' : 'text-gray-500 dark:text-gray-400'}`}
-                >
-                    Create Giveaway
-                </button>
-                 <button
-                    onClick={() => setActiveTab('verification')}
-                    className={`px-6 py-3 font-semibold ${activeTab === 'verification' ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500' : 'text-gray-500 dark:text-gray-400'}`}
-                >
-                    User Verification
-                </button>
+            <h1 className="text-4xl font-bold mb-8 text-center text-gradient">Admin Panel</h1>
+            <div className="flex justify-center border-b border-slate-300 dark:border-slate-700 mb-8">
+                <TabButton name="Manage Giveaways" tab="manage" activeTab={activeTab} setActiveTab={setActiveTab} />
+                <TabButton name="Create Giveaway" tab="create" activeTab={activeTab} setActiveTab={setActiveTab} />
+                <TabButton name="User Verification" tab="verification" activeTab={activeTab} setActiveTab={setActiveTab} />
             </div>
             {activeTab === 'create' && <CreateGiveawayForm />}
             {activeTab === 'manage' && <ManageGiveaways />}
@@ -42,6 +27,15 @@ const AdminPage: React.FC = () => {
         </div>
     );
 };
+
+const TabButton: React.FC<{name: string, tab: AdminTab, activeTab: AdminTab, setActiveTab: (tab: AdminTab) => void}> = ({name, tab, activeTab, setActiveTab}) => (
+    <button
+        onClick={() => setActiveTab(tab)}
+        className={`px-4 py-3 sm:px-6 font-semibold transition-colors duration-300 text-sm sm:text-base ${activeTab === tab ? 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'}`}
+    >
+        {name}
+    </button>
+);
 
 
 const CreateGiveawayForm: React.FC = () => {
@@ -101,22 +95,22 @@ const CreateGiveawayForm: React.FC = () => {
     };
 
     return (
-        <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl">
+        <div className="max-w-2xl mx-auto bg-white dark:bg-slate-800 p-8 rounded-xl shadow-xl">
              <form onSubmit={handleSubmit} className="space-y-6">
                 <InputField label="Title" value={title} onChange={e => setTitle(e.target.value)} required />
                 <InputField label="Reward" value={reward} onChange={e => setReward(e.target.value)} required />
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
-                    <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-gray-100 dark:bg-gray-700 p-2 rounded-md border border-gray-300 dark:border-gray-600" rows={3}></textarea>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Description</label>
+                    <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full bg-slate-100 dark:bg-slate-700 p-2 rounded-md border-2 border-slate-300 dark:border-slate-600 focus:ring-indigo-500 focus:border-indigo-500" rows={3}></textarea>
                 </div>
                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Entry Codes (one per line, format: CODE,MULTIPLIER)</label>
-                    <textarea value={codes} onChange={e => setCodes(e.target.value)} className="w-full bg-gray-100 dark:bg-gray-700 p-2 rounded-md border border-gray-300 dark:border-gray-600" rows={5} placeholder="SUMMERFUN,2&#10;BEACHDAY,5"></textarea>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Entry Codes (one per line, format: CODE,MULTIPLIER)</label>
+                    <textarea value={codes} onChange={e => setCodes(e.target.value)} className="w-full bg-slate-100 dark:bg-slate-700 p-2 rounded-md border-2 border-slate-300 dark:border-slate-600 focus:ring-indigo-500 focus:border-indigo-500" rows={5} placeholder="SUMMERFUN,2&#10;BEACHDAY,5"></textarea>
                 </div>
                 <InputField label="Image URL" type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="Optional. e.g., https://picsum.photos/..." />
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type</label>
-                    <select value={type} onChange={e => setType(e.target.value as GiveawayType)} className="w-full bg-gray-100 dark:bg-gray-700 p-2 rounded-md border border-gray-300 dark:border-gray-600">
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Type</label>
+                    <select value={type} onChange={e => setType(e.target.value as GiveawayType)} className="w-full bg-slate-100 dark:bg-slate-700 p-3 rounded-md border-2 border-slate-300 dark:border-slate-600 focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="CodeS">Code S (Standard)</option>
                         <option value="CodeL">Code L (Weighted)</option>
                     </select>
@@ -125,7 +119,7 @@ const CreateGiveawayForm: React.FC = () => {
                 
                 {message && <p className="text-center">{message}</p>}
                 
-                <button type="submit" disabled={submitting} className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-md hover:bg-indigo-500 disabled:bg-gray-500">
+                <button type="submit" disabled={submitting} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-3 px-4 rounded-lg hover:shadow-lg hover:shadow-indigo-500/50 transition-all disabled:from-slate-500 disabled:to-slate-600 disabled:cursor-not-allowed">
                     {submitting ? 'Creating...' : 'Create Giveaway'}
                 </button>
             </form>
@@ -135,8 +129,8 @@ const CreateGiveawayForm: React.FC = () => {
 
 const InputField: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label: string }> = ({ label, ...props }) => (
     <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{label}</label>
-        <input {...props} className="w-full bg-gray-100 dark:bg-gray-700 p-2 rounded-md border border-gray-300 dark:border-gray-600" />
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{label}</label>
+        <input {...props} className="w-full bg-slate-100 dark:bg-slate-700 p-3 rounded-md border-2 border-slate-300 dark:border-slate-600 focus:ring-indigo-500 focus:border-indigo-500" />
     </div>
 );
 
@@ -168,16 +162,16 @@ const ManageGiveaways: React.FC = () => {
     if (loading) return <p>Loading giveaways...</p>;
 
     return (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl">
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-xl">
             <div className="space-y-4">
                 {giveaways.map(g => (
-                    <div key={g.id} className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md flex justify-between items-center">
+                    <div key={g.id} className="bg-slate-100 dark:bg-slate-700 p-4 rounded-lg flex justify-between items-center">
                         <div>
-                            <p className="font-bold">{g.title} <span className="text-xs text-gray-500 dark:text-gray-400">({g.type})</span></p>
-                            <p className="text-sm text-gray-600 dark:text-gray-300">Status: {g.status}</p>
+                            <p className="font-bold">{g.title} <span className="text-xs text-slate-500 dark:text-slate-400">({g.type})</span></p>
+                            <p className="text-sm text-slate-600 dark:text-slate-300">Status: {g.status}</p>
                             {g.publishedWinnerDisplayName && <p className="text-sm text-green-600 dark:text-green-400">Winner: {g.publishedWinnerDisplayName}</p>}
                         </div>
-                        <button onClick={() => setSelectedGiveaway(g)} className="bg-indigo-600 px-4 py-2 rounded-md hover:bg-indigo-500 text-white">
+                        <button onClick={() => setSelectedGiveaway(g)} className="bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-500 text-white font-semibold transition-colors">
                             Manage
                         </button>
                     </div>
@@ -305,35 +299,35 @@ const GiveawayEntries: React.FC<{ giveaway: Giveaway; onBack: () => void; }> = (
     }
 
     return (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl">
-            <button onClick={onBack} className="mb-4 bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">&larr; Back</button>
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-xl">
+            <button onClick={onBack} className="mb-4 bg-slate-500 text-white px-4 py-2 rounded-lg hover:bg-slate-600 transition-colors">&larr; Back</button>
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">{currentGiveaway.title} Entries ({entries.length})</h2>
-                {entries.length > 0 && <button onClick={handleExport} className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-500">Export to JSON</button>}
+                {entries.length > 0 && <button onClick={handleExport} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-500 transition-colors">Export to JSON</button>}
             </div>
 
             {currentGiveaway.status === 'drawing' && currentGiveaway.provisionalWinnerDisplayName && (
-                 <div className="my-4 p-4 bg-yellow-100 dark:bg-yellow-900/50 border border-yellow-500 rounded-lg text-center">
+                 <div className="my-4 p-4 bg-yellow-100 dark:bg-yellow-900/50 border-l-4 border-yellow-500 rounded-r-lg text-center">
                     <p className="font-bold text-yellow-700 dark:text-yellow-400">Provisional Winner: {currentGiveaway.provisionalWinnerDisplayName}</p>
                     <div className="flex justify-center space-x-4 mt-2">
-                        <button onClick={handlePublishWinner} className="bg-green-600 px-4 py-2 rounded-md text-white">Publish Winner</button>
-                        <button onClick={handleDrawProvisionalWinner} className="bg-red-600 px-4 py-2 rounded-md text-white">Redraw</button>
+                        <button onClick={handlePublishWinner} className="bg-green-600 px-4 py-2 rounded-lg text-white font-semibold">Publish Winner</button>
+                        <button onClick={handleDrawProvisionalWinner} className="bg-red-600 px-4 py-2 rounded-lg text-white font-semibold">Redraw</button>
                     </div>
                 </div>
             )}
             
-            {currentGiveaway.status === 'active' && <button onClick={handleDrawProvisionalWinner} className="w-full mb-4 bg-green-600 py-3 rounded-md hover:bg-green-500 font-bold text-white">Draw Provisional Winner</button>}
+            {currentGiveaway.status === 'active' && <button onClick={handleDrawProvisionalWinner} className="w-full mb-4 bg-green-600 py-3 rounded-lg hover:bg-green-500 font-bold text-white transition-colors">Draw Provisional Winner</button>}
             
             {loading ? <p>Loading entries...</p> : (
-                 <div className="space-y-2 max-h-96 overflow-y-auto">
+                 <div className="space-y-2 max-h-96 overflow-y-auto p-1">
                     {entries.map(entry => (
-                        <div key={entry.id} className="bg-gray-100 dark:bg-gray-700 p-3 rounded-md flex justify-between items-center">
+                        <div key={entry.id} className="bg-slate-100 dark:bg-slate-700 p-3 rounded-lg flex justify-between items-center">
                             <div>
                                 <p><span className="font-semibold">{entry.userDisplayName}</span> (x{entry.multiplier})</p>
-                                <p className="text-xs text-gray-500">{entry.userEmail}</p>
+                                <p className="text-xs text-slate-500">{entry.userEmail}</p>
                             </div>
                             {currentGiveaway.status === 'active' && (
-                                <button onClick={() => handleSetWinner(entry)} className="bg-indigo-600 text-white text-xs px-3 py-1 rounded-md hover:bg-indigo-500">Set as Winner</button>
+                                <button onClick={() => handleSetWinner(entry)} className="bg-indigo-600 text-white text-xs px-3 py-1 rounded-md hover:bg-indigo-500 transition-colors">Set as Winner</button>
                             )}
                         </div>
                     ))}
@@ -368,19 +362,19 @@ const UserVerificationQueue: React.FC = () => {
     if (loading) return <p>Loading verification queue...</p>;
 
     return (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl">
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-xl">
              <h2 className="text-2xl font-bold mb-4">Pending Verifications ({users.length})</h2>
-             {users.length === 0 ? <p className="text-center text-gray-500 dark:text-gray-400">No pending verifications.</p> : (
+             {users.length === 0 ? <p className="text-center text-slate-500 dark:text-slate-400 py-5">No pending verifications.</p> : (
                 <div className="space-y-4">
                     {users.map(user => (
-                        <div key={user.id} className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md flex items-center justify-between">
+                        <div key={user.id} className="bg-slate-100 dark:bg-slate-700 p-4 rounded-lg flex items-center justify-between">
                             <div>
                                 <p className="font-bold">{user.publicDisplayName || user.displayName}</p>
                                 <a href={user.verificationImageUrl} target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline text-sm">View Verification Image</a>
                             </div>
                             <div className="flex space-x-2">
-                                <button onClick={() => handleVerification(user.id, 'approved')} className="bg-green-600 text-white text-xs px-3 py-2 rounded hover:bg-green-500">Approve</button>
-                                <button onClick={() => handleVerification(user.id, 'rejected')} className="bg-red-600 text-white text-xs px-3 py-2 rounded hover:bg-red-500">Reject</button>
+                                <button onClick={() => handleVerification(user.id, 'approved')} className="bg-green-600 text-white text-xs px-3 py-2 rounded-lg hover:bg-green-500 font-semibold transition-colors">Approve</button>
+                                <button onClick={() => handleVerification(user.id, 'rejected')} className="bg-red-600 text-white text-xs px-3 py-2 rounded-lg hover:bg-red-500 font-semibold transition-colors">Reject</button>
                             </div>
                         </div>
                     ))}

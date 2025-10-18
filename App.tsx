@@ -43,7 +43,7 @@ const App: React.FC = () => {
     <ThemeProvider>
       <AuthProvider>
         <HashRouter>
-          <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300">
+          <div className="min-h-screen bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-sans transition-colors duration-300">
             <Header />
             <main className="container mx-auto p-4 md:p-8">
               <Routes>

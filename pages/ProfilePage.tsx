@@ -85,7 +85,7 @@ const ProfilePage: React.FC = () => {
   };
   
   const verificationStatusUI = {
-      unverified: { text: 'Not Verified', color: 'bg-gray-500' },
+      unverified: { text: 'Not Verified', color: 'bg-slate-500' },
       pending: { text: 'Pending Approval', color: 'bg-yellow-500' },
       approved: { text: 'Approved', color: 'bg-green-500' },
       rejected: { text: 'Rejected', color: 'bg-red-500' },
@@ -95,64 +95,66 @@ const ProfilePage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl mb-8">
-        <div className="flex items-center space-x-6 mb-6">
-            <img src={userProfile.photoURL || ''} alt="profile" className="w-24 h-24 rounded-full border-4 border-indigo-500" />
+      <div className="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-xl mb-8">
+        <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 mb-6">
+            <img src={userProfile.photoURL || ''} alt="profile" className="w-24 h-24 rounded-full border-4 border-indigo-500 shadow-lg" />
             <div>
-              <h1 className="text-3xl font-bold">{userProfile.publicDisplayName || userProfile.displayName}</h1>
-              <p className="text-gray-500 dark:text-gray-400">{userProfile.email}</p>
-              <span className={`mt-2 inline-block px-3 py-1 text-xs font-semibold text-white ${currentVerification.color} rounded-full uppercase`}>
-                {currentVerification.text}
-              </span>
+              <h1 className="text-3xl font-bold text-center sm:text-left">{userProfile.publicDisplayName || userProfile.displayName}</h1>
+              <p className="text-slate-500 dark:text-slate-400 text-center sm:text-left">{userProfile.email}</p>
+              <div className="text-center sm:text-left">
+                <span className={`mt-2 inline-block px-3 py-1 text-xs font-semibold text-white ${currentVerification.color} rounded-full uppercase tracking-wider`}>
+                  {currentVerification.text}
+                </span>
+              </div>
             </div>
         </div>
         {!isEditing ? (
-             <button onClick={() => setIsEditing(true)} className="bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-500">Edit Profile</button>
+             <button onClick={() => setIsEditing(true)} className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:shadow-lg hover:shadow-indigo-500/50 transition-all">Edit Profile</button>
         ) : (
-            <form onSubmit={handleProfileUpdate} className="space-y-4 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <form onSubmit={handleProfileUpdate} className="space-y-4 mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                 <div>
-                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Public Display Name</label>
-                    <input type="text" value={publicDisplayName} onChange={e => setPublicDisplayName(e.target.value)} className="w-full bg-gray-200 dark:bg-gray-700 p-2 rounded-md" required />
+                    <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">Public Display Name</label>
+                    <input type="text" value={publicDisplayName} onChange={e => setPublicDisplayName(e.target.value)} className="w-full bg-slate-200 dark:bg-slate-700 p-3 rounded-md border-2 border-slate-300 dark:border-slate-600 focus:ring-indigo-500 focus:border-indigo-500 transition-colors" required />
                 </div>
                 {(userProfile.verificationStatus === 'unverified' || userProfile.verificationStatus === 'rejected') && (
                     <div>
-                        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                        <label className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
                           {userProfile.verificationStatus === 'rejected' ? 'Re-submit In-Game Profile Image URL' : 'In-Game Profile Image URL'}
                         </label>
                         <input 
                             type="url" 
                             value={verificationUrl} 
                             onChange={e => setVerificationUrl(e.target.value)} 
-                            className="w-full bg-gray-200 dark:bg-gray-700 p-2 rounded-md"
+                            className="w-full bg-slate-200 dark:bg-slate-700 p-3 rounded-md border-2 border-slate-300 dark:border-slate-600 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                             placeholder="https://imgur.com/your-image-link"
                             required
                         />
-                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Upload a screenshot of your in-game profile to a site like Imgur and paste the direct link here.</p>
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Upload a screenshot of your in-game profile to a site like Imgur and paste the direct link here.</p>
                         {userProfile.verificationStatus === 'rejected' && <p className="text-xs text-red-500 dark:text-red-400 mt-1">Your previous submission was rejected. Please provide a new image link.</p>}
                     </div>
                 )}
                 {message && <p className={`text-center text-sm ${message.type === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{message.text}</p>}
                 <div className="flex space-x-2">
-                    <button type="submit" disabled={isSubmitting} className="bg-green-600 text-white py-2 px-4 rounded-md disabled:bg-gray-500 hover:bg-green-500">{isSubmitting ? 'Saving...' : 'Save Changes'}</button>
-                    <button type="button" onClick={() => setIsEditing(false)} className="bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600">Cancel</button>
+                    <button type="submit" disabled={isSubmitting} className="bg-gradient-to-r from-green-500 to-teal-500 text-white font-bold py-2 px-4 rounded-lg disabled:from-slate-500 disabled:to-slate-600 disabled:cursor-not-allowed transition-all">{isSubmitting ? 'Saving...' : 'Save Changes'}</button>
+                    <button type="button" onClick={() => setIsEditing(false)} className="bg-slate-500 text-white py-2 px-4 rounded-lg hover:bg-slate-600 transition-all">Cancel</button>
                 </div>
             </form>
         )}
       </div>
       
-      <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl">
+      <div className="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-xl">
         <h2 className="text-2xl font-bold mb-6">My Giveaway Entries</h2>
         {loading ? <p>Loading entries...</p> : entries.length > 0 ? (
           <div className="space-y-4">
             {entries.map(entry => (
-              <div key={entry.id} className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md flex justify-between items-center">
+              <div key={entry.id} className="bg-slate-100 dark:bg-slate-700 p-4 rounded-lg flex justify-between items-center">
                 <div>
-                  <Link to={`/giveaway/${entry.giveawayId}`} className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Giveaway: {entry.giveawayId.substring(0, 8)}...</Link>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Entered on: {entry.timestamp.toDate().toLocaleDateString()}</p>
+                  <Link to={`/giveaway/${entry.giveawayId}`} className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Giveaway Details</Link>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Entered on: {entry.timestamp.toDate().toLocaleDateString()}</p>
                 </div>
                 <div className="flex items-center space-x-3">
                   {entry.multiplier > 1 && <span className="text-xs font-bold text-yellow-800 dark:text-yellow-400 px-2 py-1 rounded-full bg-yellow-200 dark:bg-yellow-900/50">x{entry.multiplier}</span>}
-                  <span className={`px-3 py-1 text-xs font-semibold text-white ${statusColors[entry.status]} rounded-full uppercase`}>
+                  <span className={`px-3 py-1 text-xs font-semibold text-white ${statusColors[entry.status]} rounded-full uppercase tracking-wider`}>
                     {entry.status}
                   </span>
                 </div>
@@ -160,7 +162,7 @@ const ProfilePage: React.FC = () => {
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 dark:text-gray-400 text-center">You haven't entered any giveaways yet.</p>
+          <p className="text-slate-500 dark:text-slate-400 text-center py-5">You haven't entered any giveaways yet.</p>
         )}
       </div>
     </div>

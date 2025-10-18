@@ -144,51 +144,51 @@ const GiveawayDetailPage: React.FC = () => {
   const isUserVerified = userProfile?.verificationStatus === 'approved';
 
   return (
-    <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl">
+    <div className="max-w-4xl mx-auto bg-white dark:bg-slate-800 p-6 md:p-8 rounded-xl shadow-2xl">
       <img className="h-64 w-full object-cover rounded-lg mb-6" src={giveaway.imageUrl || `https://picsum.photos/seed/${giveaway.id}/800/400`} alt={giveaway.title} />
-      <h1 className="text-4xl font-bold text-indigo-600 dark:text-indigo-400">{giveaway.title}</h1>
-      <p className="text-lg text-indigo-500 dark:text-indigo-300 mt-2">{giveaway.reward}</p>
-      <p className="mt-4 text-gray-700 dark:text-gray-300">{giveaway.description}</p>
-      <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">Ends on: {giveaway.endDate.toDate().toLocaleString()}</p>
+      <h1 className="text-4xl font-bold text-gradient">{giveaway.title}</h1>
+      <p className="text-xl font-semibold text-indigo-500 dark:text-indigo-300 mt-2">{giveaway.reward}</p>
+      <p className="mt-4 text-slate-700 dark:text-slate-300">{giveaway.description}</p>
+      <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">Ends on: {giveaway.endDate.toDate().toLocaleString()}</p>
 
       {giveaway.status === 'finished' && giveaway.publishedWinnerDisplayName && (
-          <div className="mt-8 p-4 bg-green-100 dark:bg-green-900/50 border border-green-500 rounded-lg text-center">
-              <h3 className="text-2xl font-bold text-green-700 dark:text-green-400">Giveaway Finished!</h3>
-              <p className="text-lg mt-2 text-gray-800 dark:text-gray-200">Congratulations to the winner: <span className="font-bold">{giveaway.publishedWinnerDisplayName}</span></p>
+          <div className="mt-8 p-4 bg-gradient-to-r from-green-400 to-teal-500 rounded-lg text-center shadow-lg">
+              <h3 className="text-2xl font-bold text-white">Giveaway Finished!</h3>
+              <p className="text-lg mt-2 text-white">Congratulations to the winner: <span className="font-bold">{giveaway.publishedWinnerDisplayName}</span></p>
           </div>
       )}
 
       {isGiveawayActive && (
-          <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
-            <h2 className="text-2xl font-bold mb-4">Enter Giveaway</h2>
+          <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-700">
+            <h2 className="text-3xl font-bold mb-4 text-center text-gradient">Enter Giveaway</h2>
             {hasEntered ? (
-                <div className="p-4 bg-green-100 dark:bg-green-900/50 border border-green-500 rounded-lg text-center">
-                    <p className="text-green-700 dark:text-green-400 font-semibold">You have successfully entered this giveaway!</p>
+                <div className="p-4 bg-green-100 dark:bg-green-900/50 border-l-4 border-green-500 rounded-r-lg text-center">
+                    <p className="text-green-700 dark:text-green-300 font-semibold text-lg">You have successfully entered this giveaway!</p>
                     {probability !== null && (
-                         <p className="text-sm mt-2 text-gray-600 dark:text-gray-300">Your estimated chance of winning is: <span className="font-bold">{probability.toFixed(2)}%</span></p>
+                         <p className="text-sm mt-2 text-slate-600 dark:text-slate-300">Your estimated chance of winning is: <span className="font-bold">{probability.toFixed(2)}%</span></p>
                     )}
                 </div>
             ) : !isUserVerified ? (
-                 <div className="p-4 bg-yellow-100 dark:bg-yellow-900/50 border border-yellow-500 rounded-lg text-center">
-                    <p className="text-yellow-700 dark:text-yellow-400 font-semibold">Your account must be approved before you can enter giveaways.</p>
-                     <p className="text-sm mt-2 text-gray-600 dark:text-gray-300">Please go to your <Link to="/profile" className="font-bold underline hover:text-yellow-600 dark:hover:text-yellow-300">Profile Page</Link> to check your verification status.</p>
+                 <div className="p-4 bg-yellow-100 dark:bg-yellow-900/50 border-l-4 border-yellow-500 rounded-r-lg text-center">
+                    <p className="text-yellow-700 dark:text-yellow-300 font-semibold">Your account must be approved before you can enter giveaways.</p>
+                     <p className="text-sm mt-2 text-slate-600 dark:text-slate-300">Please go to your <Link to="/profile" className="font-bold underline hover:text-yellow-600 dark:hover:text-yellow-200">Profile Page</Link> to check your verification status.</p>
                 </div>
             ) : (
                 <form onSubmit={handleSubmit}>
                 <div className="mb-4">
-                    <label htmlFor="entryCode" className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Secret Code (Optional)</label>
+                    <label htmlFor="entryCode" className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-2">Secret Code (Optional)</label>
                     <input
                     type="text"
                     id="entryCode"
                     value={entryCode}
                     onChange={(e) => setEntryCode(e.target.value)}
                     placeholder="Enter a code for a multiplier"
-                    className="w-full bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white p-2 rounded-md border border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white p-3 rounded-md border-2 border-slate-300 dark:border-slate-600 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                     />
                 </div>
                 
                 {message && (
-                    <div className={`p-3 my-4 rounded-md text-sm ${message.type === 'success' ? 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200' : 'bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200'}`}>
+                    <div className={`p-3 my-4 rounded-md text-sm ${message.type === 'success' ? 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200' : 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200'}`}>
                     {message.text}
                     </div>
                 )}
@@ -196,7 +196,7 @@ const GiveawayDetailPage: React.FC = () => {
                 <button
                     type="submit"
                     disabled={submitting || !isGiveawayActive}
-                    className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-md hover:bg-indigo-500 transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
+                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-3 px-4 rounded-lg hover:shadow-lg hover:shadow-indigo-500/50 hover:scale-105 transition-all disabled:from-slate-500 disabled:to-slate-600 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                     {submitting ? 'Submitting...' : 'Enter Now'}
                 </button>

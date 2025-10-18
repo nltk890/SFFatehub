@@ -41,7 +41,7 @@ const HomePage: React.FC = () => {
 
   return (
     <div>
-      <h1 className="text-4xl font-bold mb-8 text-center text-indigo-600 dark:text-indigo-400">Active Giveaways</h1>
+      <h1 className="text-4xl md:text-5xl font-extrabold mb-8 text-center text-gradient">Active Giveaways</h1>
       {activeGiveaways.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {activeGiveaways.map(giveaway => (
@@ -49,10 +49,10 @@ const HomePage: React.FC = () => {
           ))}
         </div>
       ) : (
-        <p className="text-center text-gray-500 dark:text-gray-400">No active giveaways at the moment. Check back soon!</p>
+        <p className="text-center text-slate-500 dark:text-slate-400 py-10">No active giveaways at the moment. Check back soon!</p>
       )}
 
-      <h2 className="text-3xl font-bold mt-16 mb-8 text-center text-indigo-600 dark:text-indigo-400">Past Giveaways</h2>
+      <h2 className="text-3xl md:text-4xl font-bold mt-16 mb-8 text-center text-gradient">Past Giveaways</h2>
       {pastGiveaways.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {pastGiveaways.map(giveaway => (
@@ -60,7 +60,7 @@ const HomePage: React.FC = () => {
           ))}
         </div>
       ) : (
-         <p className="text-center text-gray-500 dark:text-gray-400">No past giveaways yet.</p>
+         <p className="text-center text-slate-500 dark:text-slate-400 py-10">No past giveaways yet.</p>
       )}
     </div>
   );
