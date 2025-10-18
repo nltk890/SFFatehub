@@ -105,7 +105,8 @@ const CreateGiveawayForm: React.FC = () => {
                 </div>
                  <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Entry Codes (one per line, format: CODE,MULTIPLIER)</label>
-                    <textarea value={codes} onChange={e => setCodes(e.target.value)} className="w-full bg-slate-100 dark:bg-slate-700 p-2 rounded-md border-2 border-slate-300 dark:border-slate-600 focus:ring-indigo-500 focus:border-indigo-500" rows={5} placeholder="SUMMERFUN,2&#10;BEACHDAY,5"></textarea>
+                    <textarea value={codes} onChange={e => setCodes(e.target.value)} className="w-full bg-slate-100 dark:bg-slate-700 p-2 rounded-md border-2 border-slate-300 dark:border-slate-600 focus:ring-indigo-500 focus:border-indigo-500" rows={5} placeholder="SUMMERFUN,2
+BEACHDAY,5"></textarea>
                 </div>
                 <InputField label="Image URL" type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="Optional. e.g., https://picsum.photos/..." />
                 <div>
@@ -281,6 +282,16 @@ const GiveawayEntries: React.FC<{ giveaway: Giveaway; onBack: () => void; }> = (
             provisionalWinnerId: '',
             provisionalWinnerDisplayName: '',
         });
+        
+        // Create notification for the winner
+        await addDoc(collection(db, COLLECTIONS.NOTIFICATIONS), {
+            userId: currentGiveaway.provisionalWinnerId,
+            message: `Congratulations! You won the "${currentGiveaway.title}" giveaway!`,
+            link: `/giveaway/${giveaway.id}`,
+            read: false,
+            timestamp: Timestamp.now(),
+        });
+
         alert(`Winner ${currentGiveaway.provisionalWinnerDisplayName} has been published!`);
         onBack();
     }
@@ -356,6 +367,17 @@ const UserVerificationQueue: React.FC = () => {
     const handleVerification = async (userId: string, newStatus: 'approved' | 'rejected') => {
         const userRef = doc(db, COLLECTIONS.USERS, userId);
         await updateDoc(userRef, { verificationStatus: newStatus });
+
+        if (newStatus === 'approved') {
+            await addDoc(collection(db, COLLECTIONS.NOTIFICATIONS), {
+                userId: userId,
+                message: "Your profile has been approved! You can now enter giveaways.",
+                link: '/profile',
+                read: false,
+                timestamp: Timestamp.now(),
+            });
+        }
+
         fetchPendingUsers(); // Refresh list
     };
     

@@ -56,6 +56,15 @@ export interface GiveawayCode {
     multiplier: number;
 }
 
+export interface Notification {
+  id: string;
+  userId: string;
+  message: string;
+  link: string;
+  read: boolean;
+  timestamp: Timestamp;
+}
+
 // Fix: Add global type definitions for Vite environment variables to fix errors related to `import.meta.env`.
 declare global {
   interface ImportMetaEnv {

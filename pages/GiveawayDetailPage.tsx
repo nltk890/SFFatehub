@@ -162,10 +162,18 @@ const GiveawayDetailPage: React.FC = () => {
           <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-700">
             <h2 className="text-3xl font-bold mb-4 text-center text-gradient">Enter Giveaway</h2>
             {hasEntered ? (
-                <div className="p-4 bg-green-100 dark:bg-green-900/50 border-l-4 border-green-500 rounded-r-lg text-center">
-                    <p className="text-green-700 dark:text-green-300 font-semibold text-lg">You have successfully entered this giveaway!</p>
-                    {probability !== null && (
-                         <p className="text-sm mt-2 text-slate-600 dark:text-slate-300">Your estimated chance of winning is: <span className="font-bold">{probability.toFixed(2)}%</span></p>
+                <div className="p-6 bg-green-100 dark:bg-green-900/50 border-l-4 border-green-500 rounded-r-lg text-center">
+                    <p className="text-green-800 dark:text-green-200 font-bold text-xl">You're in!</p>
+                    <p className="text-green-700 dark:text-green-300 font-semibold text-lg mt-1">Good luck!</p>
+                    
+                    {giveaway.type === 'CodeS' && probability !== null && (
+                        <div className="mt-4">
+                            <p className="text-sm text-slate-600 dark:text-slate-300">Your current estimated chance of winning is:</p>
+                            <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">{probability.toFixed(2)}%</p>
+                        </div>
+                    )}
+                    {giveaway.type === 'CodeL' && (
+                        <p className="text-sm mt-4 text-slate-600 dark:text-slate-400 italic">For this type of giveaway, the winner is selected from top contenders based on engagement. Keep participating in the community to increase your chances!</p>
                     )}
                 </div>
             ) : !isUserVerified ? (

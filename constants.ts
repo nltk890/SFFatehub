@@ -8,4 +8,5 @@ export const COLLECTIONS = {
     GIVEAWAYS: 'giveaways',
     ENTRIES: 'entries',
     GIVEAWAY_CODES: 'giveaway_codes',
+    NOTIFICATIONS: 'notifications',
 };
