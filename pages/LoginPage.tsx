@@ -53,12 +53,12 @@ const LoginPage: React.FC = () => {
 
       <div className="relative w-full max-w-md p-8 space-y-8 bg-white/20 dark:bg-slate-800/50 backdrop-blur-lg rounded-2xl shadow-2xl text-center border border-white/20">
         <img 
-          src="https://drive.google.com/uc?export=view&id=1bJEyc4C8hw0ltsx6JIfet55hmcNyBtL0"
+          src="https://iili.io/K82KYWN.jpg"
           alt="Shadow's Fate Hub Logo"
           className="w-40 h-40 mx-auto rounded-full shadow-2xl border-4 border-white/30 mb-6"
         />
         <div>
-           <h1 className="text-5xl font-extrabold text-gradient">
+           <h1 className="text-5xl font-extrabold">
             Shadow's Fate Hub
           </h1>
           <p className="mt-4 text-lg text-slate-100">
