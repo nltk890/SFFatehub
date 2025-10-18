@@ -4,10 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Shadow's Fate Hub</title>
+    <script>
+      // This configuration tells Tailwind CSS to use the 'class' strategy for dark mode.
+      // This is necessary when using the CDN script to enable toggling via a class on the <html> element.
+      tailwind.config = {
+        darkMode: 'class'
+      }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/heroicons/2.1.3/24/outline/heroicons.min.css" integrity="sha512-MatZemZoxeQfjepB8dLIH2A/I9A/fOOqHdG1W0VL1BWTGvO2gNOi2sv5/x/uWnI0Yh+e4D+jVvj0OAUV4gH4wA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- The Heroicons stylesheet was removed as it was unused and causing a console error. -->
 
-<link rel="stylesheet" href="/index.css">
 <script type="importmap">
 {
   "imports": {
