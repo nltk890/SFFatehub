@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { collection, query, where, getDocs, orderBy, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { Entry, UserProfile, GiveawayStatus } from '../types';
+import { Entry, UserProfile } from '../types';
 import { COLLECTIONS } from '../constants';
 import { Link } from 'react-router-dom';
 
